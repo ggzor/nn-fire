@@ -35,7 +35,7 @@ def train_multiple(
     )
     return ExperimentResult(
         params,
-        results,
-        np.mean(results),
-        np.std(results),
+        results * 100,
+        np.mean(results) * 100,
+        np.std(results) * 100,
     )
