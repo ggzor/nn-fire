@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  InstanceType:
+    Type: String
+    Description: The instance type to run on.
+  KeyName:
+    Type: String
+    Description: |
+      The name of the EC2 key pair or empty if you're not wanting to connect.
+    Default: ''
+  SSHCidrIp:
+    Type: String
+    Description: The IP range for SSH access, only used if KeyName is set.
+    Default: '0.0.0.0/0'
+
+Mappings:
+  AMIMap:
+    us-east-1:
+      AMI: 'ami-06cf15d6d096df5d2'
+    us-east-2:
+      AMI: 'ami-0806cc3ac66515671'
+
+Resources:
+  ComputeServer:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: !FindInMap [AMIMap, !Ref AWS::Region, AMI]
+      InstanceType: !Ref InstanceType
+      BlockDeviceMappings:
+        - DeviceName: '/dev/xvda'
+          Ebs:
+            VolumeType: gp3
+            VolumeSize: 8
+            DeleteOnTermination: true
+      SecurityGroups: [!Ref ComputeServerSecurityGroup]
+      KeyName: !If ["HasKeyName", !Ref KeyName, !Ref AWS::NoValue]
+
+  ComputeServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: VPN server firewall
+      SecurityGroupIngress:
+        - !If
+            - HasKeyName
+            - IpProtocol: tcp
+              FromPort: 22
+              ToPort: 22
+              CidrIp: !Ref SSHCidrIp
+            - !Ref AWS::NoValue
+
+Outputs:
+  PublicIp:
+    Value: !GetAtt
+             - ComputeServer
+             - PublicIp
+Conditions:
+  HasKeyName: !Not [!Equals [!Ref KeyName, ""]]
+
+
