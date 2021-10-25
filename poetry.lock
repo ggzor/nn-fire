@@ -1119,8 +1119,8 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 
 [metadata]
 lock-version = "1.1"
-python-versions = ">=3.9,<3.10"
-content-hash = "f122a35f92c66b6c14869757cf4e4c3d87135b28089291314f3fb55aaccdff13"
+python-versions = ">=3.8,<3.10"
+content-hash = "9dc9e7a73abfbfda21bece81a52e1ea3e1c99e5e89a059e2e3500335d43fab02"
 
 [metadata.files]
 altair = [
