@@ -2,42 +2,36 @@
 
 set -euo pipefail
 
-# Update system dependencies
-echo "Installing missing dependencies..."
-(
-sudo yum update -y
-sudo yum groupinstall -y "Development Tools"
-sudo yum -y install openssl-devel bzip2-devel libffi-devel xz-devel
-sudo yum -y install wget
-) 1>/dev/null
+sudo yum update -y --quiet
 
 # Install Python 3.9 from source
-echo "Installing python3.9 from source..."
+echo "Installing python3.8"
 (
-  wget -nv 'https://www.python.org/ftp/python/3.9.7/Python-3.9.7.tgz'
-  tar -xvf 'Python-3.9.7.tgz'
-  cd Python-3.9*
+  sudo amazon-linux-extras enable python3.8
+  sudo yum install -y --quiet python38 python38-devel
 
-  ./configure --enable-optimizations &>/dev/null
-  sudo make altinstall &>/dev/null
+  sudo yum groupinstall -y --quiet "Development Tools"
+  sudo yum install -y --quiet openssl-devel bzip2-devel libffi-devel xz-devel
 
   echo "Installing poetry..."
-  pip3.9 install --user poetry &>/dev/null
+  curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py \
+    | python3.8 -
 ) 1>/dev/null
 
 # Run notebook
 (
+  sudo yum install -y --quiet git
   git clone --branch main https://github.com/ggzor/nn-fire
   cd nn-fire
 
   echo "Installing project dependencies..."
-  ~/.local/bin/poetry install 1>/dev/null
+  ~/.local/bin/poetry install
 
   echo "Running notebook..."
   ( time ~/.local/bin/poetry run jupyter nbconvert \
     --to notebook \
     --execute notebook.ipynb \
-    --output result.ipynb ) &> performance.txt
+    --output result.ipynb ) > performance.txt
 )
 
 # Generate results
