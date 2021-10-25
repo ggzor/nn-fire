@@ -18,7 +18,7 @@ echo "Installing python3.8"
     | python3.8 -
 ) 1>/dev/null
 
-# Run notebook
+# Install dependencies
 (
   sudo yum install -y --quiet git
   git clone --branch complete https://github.com/ggzor/nn-fire
@@ -26,16 +26,5 @@ echo "Installing python3.8"
 
   echo "Installing project dependencies..."
   ~/.local/bin/poetry install
-
-  echo "Running notebook..."
-  ( time ~/.local/bin/poetry run jupyter nbconvert \
-    --to notebook \
-    --execute notebook.ipynb \
-    --output result.ipynb ) > performance.txt
 )
-
-# Generate results
-mkdir results
-mv nn-fire/result.ipynb results/
-mv nn-fire/performance.txt results/
 

@@ -98,11 +98,11 @@ until run_ssh true; do
   (( retry += 1 ))
 done
 
-echo "Running commands..."
-run_scp ./run-notebook.sh ec2-user@"$INSTANCE_IP":~
-run_ssh ./run-notebook.sh
-run_scp -r ec2-user@"$INSTANCE_IP":~/results .
-echo "Commands done."
+echo "Setting up the environment..."
+run_scp ./setup-environment.sh ec2-user@"$INSTANCE_IP":~
+run_ssh ./setup-environment.sh
+
+echo "Runner ready. Press Ctrl+C to tear down."
 
 delete_stack
 
