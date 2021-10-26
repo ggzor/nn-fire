@@ -21,7 +21,7 @@ echo "Installing python3.8"
 # Install dependencies
 (
   sudo yum install -y --quiet git &>/dev/null
-  git clone --branch complete-blur https://github.com/ggzor/nn-fire
+  git clone --branch complete https://github.com/ggzor/nn-fire
   cd nn-fire
 
   echo "Installing project dependencies..."
