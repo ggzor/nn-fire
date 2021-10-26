@@ -10,6 +10,7 @@ from sys import argv
 import boto3
 
 from experimenter.model import DataExperiment, ExperimentResult, ModelParams
+from experimenter.parallel import ParallelExperimenter
 
 log = logging.getLogger(__name__)
 
@@ -102,11 +103,15 @@ class RemoteExperimenter:
 
 
 def run_remote(data_fileid):
-    print("Some log message")
+    data_path = f"../temp/{data_fileid}"
+    result_path = f"../temp/result_{data_fileid}"
 
-    result_file = f"~/temp/result_{data_fileid}"
-    with open(result_file, "wb") as f:
-        pickle.dump([1, "Hello world"], f)
+    with open(data_path, "rb") as data_file:
+        params, experiments, pool_size, random = pickle.load(data_file)
+        experimenter = ParallelExperimenter(experiments, pool_size, random)
+
+        with open(result_path, "wb") as f:
+            pickle.dump(experimenter.run_all(params), f)
 
 
 def test_remote():
@@ -116,6 +121,7 @@ def test_remote():
 
 if __name__ == "__main__":
     if len(argv) > 1:
+        logging.basicConfig(level="INFO")
         run_remote(argv[1])
     else:
         test_remote()
