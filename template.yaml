@@ -39,7 +39,7 @@ Resources:
   ComputeServerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: VPN server firewall
+      GroupDescription: Compute server firewall
       SecurityGroupIngress:
         - !If
             - HasKeyName
