@@ -13,7 +13,7 @@ echo "Running notebook..."
     --execute notebook.ipynb \
     --output result.ipynb \
     --debug
-) | tee result/performance.txt
+)
 
 cp nn-fire/result.ipynb result/
 
