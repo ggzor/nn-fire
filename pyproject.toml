@@ -10,7 +10,6 @@ scikit-learn = "^1.0"
 numpy = "^1.21.3"
 altair = "^4.1.0"
 vega = "^3.5.0"
-boto3 = "^1.19.3"
 ray = "^1.7.1"
 tqdm = "^4.62.3"
 
