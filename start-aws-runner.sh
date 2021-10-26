@@ -5,7 +5,7 @@ source ./common.sh
 
 if (( $# < 2 || $# > 3 )); then
   cat <<EOF
-Usage: $0 STACK_NAME KEY_NAME [IMAGE=t4g.nano]"
+Usage: $0 STACK_NAME KEY_NAME [IMAGE=t3.nano]"
 
 STACK_NAME: The name to use to manage this stack.
 KEY_NAME: The key to use from your account to allow SSH access
@@ -15,7 +15,7 @@ fi
 
 STACK_NAME=$1
 KEY_NAME=$2
-IMAGE=${3:-t4g.nano}
+IMAGE=${3:-t3.nano}
 
 stack_exists() {
   aws cloudformation describe-stacks --stack-name "$STACK_NAME" &>/dev/null
@@ -70,7 +70,7 @@ echo "Connecting to instance..."
 retry=0
 max_retry=4
 until run_ssh true; do
-  if (( $retry >= 4 )); then
+  if (( $retry >= $max_retry )); then
     echo "Giving up in retries."
     exit 1
   fi
@@ -86,7 +86,13 @@ echo "Setting up the environment..."
 run_scp ./setup-environment.sh ec2-user@"$INSTANCE_IP":~
 run_ssh ./setup-environment.sh
 
-echo "The compute server IP is: $INSTANCE_IP"
-echo "Runner ready. Press Ctrl+C to tear down."
-sleep infinity
+echo "Starting notebook run script..."
+run_scp ./run-notebook.sh ec2-user@"$INSTANCE_IP":~
+run_ssh ./run-notebook.sh
+
+echo "Copying results..."
+run_scp -r ec2-user@"$INSTANCE_IP":~/result .
+
+echo "Deleting the stack..."
+delete_stack
 
