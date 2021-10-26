@@ -86,6 +86,7 @@ echo "Setting up the environment..."
 run_scp ./setup-environment.sh ec2-user@"$INSTANCE_IP":~
 run_ssh ./setup-environment.sh
 
+echo "The compute server IP is: $INSTANCE_IP"
 echo "Runner ready. Press Ctrl+C to tear down."
 sleep infinity
 
