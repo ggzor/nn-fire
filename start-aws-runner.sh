@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
+source ./common.sh
 
 if (( $# < 2 || $# > 3 )); then
   cat <<EOF
@@ -64,23 +65,6 @@ INSTANCE_IP="$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" \
 
 echo "The compute server IP is: $INSTANCE_IP"
 
-
-# We are going to connect to an ephemeral server
-# No need to save keys
-SSH_OPTIONS=(
-  -o StrictHostKeyChecking=no
-  -o UserKnownHostsFile=/dev/null
-  -o LogLevel=ERROR
-)
-
-run_ssh() {
-  ssh "${SSH_OPTIONS[@]}" ec2-user@"$INSTANCE_IP" "$@"
-}
-
-run_scp() {
-  scp "${SSH_OPTIONS[@]}" "$@"
-}
-
 echo "Connecting to instance..."
 
 retry=0
@@ -98,16 +82,11 @@ until run_ssh true; do
   (( retry += 1 ))
 done
 
-echo "Running commands..."
-run_scp ./run-notebook.sh ec2-user@"$INSTANCE_IP":~
-run_ssh ./run-notebook.sh
-run_scp -r ec2-user@"$INSTANCE_IP":~/results .
-echo "Commands done."
+echo "Setting up the environment..."
+run_scp ./setup-environment.sh ec2-user@"$INSTANCE_IP":~
+run_ssh ./setup-environment.sh
 
-delete_stack
-
-echo "Waiting for stack deletion..."
-aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
-
-echo "Stack deleted succesfully"
+echo "The compute server IP is: $INSTANCE_IP"
+echo "Runner ready. Press Ctrl+C to tear down."
+sleep infinity
 

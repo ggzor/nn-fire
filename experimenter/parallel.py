@@ -1,9 +1,10 @@
 from contextlib import AbstractContextManager, ExitStack
 from dataclasses import dataclass
 from itertools import repeat
-from multiprocessing import Pool
+from multiprocessing import Pool, Manager
+from multiprocessing.context import Process
 from multiprocessing.shared_memory import SharedMemory
-from typing import Iterable, List, Tuple
+from typing import List, Tuple
 import logging
 import os
 
@@ -107,16 +108,26 @@ class SharedDataExperiment(AbstractContextManager):
 def run_shared_experiment(
     params: ModelParams,
     shared_experiments: List[DataExperimentRebuildInfo],
+    queue,
     random=None,
 ) -> ExperimentResult:
-    log.debug("%d:run_shared_experiment(%s)", os.getpid(), shared_experiments)
     with ExitStack() as stack:
         experiments = [
             stack.enter_context(SharedDataExperiment.rebuild(exp)).data
             for exp in shared_experiments
         ]
 
-        return train_multiple(params, experiments, random)
+        result = train_multiple(params, experiments, random)
+        queue.put(params)
+        return result
+
+
+def log_increases(max_count, queue):
+    log.info("%d / %d: %s", 0, max_count, "Starting...")
+
+    for i in range(1, max_count + 1):
+        params = queue.get()
+        log.info("%d / %d: %s", i, max_count, params)
 
 
 class ParallelExperimenter:
@@ -125,19 +136,27 @@ class ParallelExperimenter:
         self.pool_size = pool_size
         self.random = random
 
-    def run_all(self, params: Iterable[ModelParams]) -> List[ExperimentResult]:
-        log.debug("%d:run_all", os.getpid())
-        with Pool(self.pool_size) as pool, ExitStack() as stack:
-            shared_experiments = [
-                stack.enter_context(SharedDataExperiment.new(data)).rebuild_info
-                for data in self.experiments
-            ]
+    def run_all(self, params: List[ModelParams]) -> List[ExperimentResult]:
+        with Manager() as manager:
+            queue = manager.Queue()
 
-            return pool.starmap(
-                run_shared_experiment,
-                zip(
-                    params,
-                    repeat(shared_experiments),
-                    repeat(self.random),
-                ),
+            log_process = Process(
+                target=log_increases, args=(len(params), queue), daemon=True
             )
+            log_process.start()
+
+            with Pool(self.pool_size) as pool, ExitStack() as stack:
+                shared_experiments = [
+                    stack.enter_context(SharedDataExperiment.new(data)).rebuild_info
+                    for data in self.experiments
+                ]
+
+                return pool.starmap(
+                    run_shared_experiment,
+                    zip(
+                        params,
+                        repeat(shared_experiments),
+                        repeat(queue),
+                        repeat(self.random),
+                    ),
+                )
