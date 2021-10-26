@@ -54,6 +54,9 @@ Outputs:
     Value: !GetAtt
              - ComputeServer
              - PublicIp
+  InstanceId:
+    Value: !Ref ComputeServer
+
 Conditions:
   HasKeyName: !Not [!Equals [!Ref KeyName, ""]]
 
