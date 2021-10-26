@@ -118,16 +118,16 @@ def run_shared_experiment(
         ]
 
         result = train_multiple(params, experiments, random)
-        queue.put(1)
+        queue.put(params)
         return result
 
 
 def log_increases(max_count, queue):
-    for i in range(max_count):
-        log.info("%d / %d", i, max_count)
-        queue.get()
+    log.info("%d / %d: %s", 0, max_count, "Starting...")
 
-    log.info("%d / %d", max_count, max_count)
+    for i in range(1, max_count + 1):
+        params = queue.get()
+        log.info("%d / %d: %s", i, max_count, params)
 
 
 class ParallelExperimenter:
